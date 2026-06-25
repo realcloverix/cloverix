@@ -1,0 +1,31 @@
+-- Cloverix Service Layer
+local CloverixServices = {}
+
+local virtualInput = getvirtualinputmanager and getvirtualinputmanager()
+
+function CloverixServices:Get(...)
+    local results = {}
+
+    for _, serviceName in next, { ... } do
+        table.insert(results, self[serviceName])
+    end
+
+    return unpack(results)
+end
+
+setmetatable(CloverixServices, {
+    __index = function(self, key)
+        if key == "VirtualInputManager" and virtualInput then
+            return virtualInput
+        elseif key == "CurrentCamera" then
+            return workspace.CurrentCamera
+        end
+
+        local service = game:GetService(key)
+        rawset(self, key, service)
+
+        return service
+    end
+})
+
+return CloverixServices

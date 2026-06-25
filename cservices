@@ -1,0 +1,51 @@
+--// CLOVERIX SERVICE REGISTRY 🌿
+
+local CloverixServices = {}
+local vim = getvirtualinputmanager and getvirtualinputmanager()
+
+local ServiceCache = {}
+
+-- Fetch multiple services at once
+function CloverixServices:Get(...)
+    local results = {}
+
+    for _, serviceName in ipairs({...}) do
+        table.insert(results, self[serviceName])
+    end
+
+    return table.unpack(results)
+end
+
+setmetatable(CloverixServices, {
+    __index = function(self, key)
+
+        -- special virtual input hook
+        if key == "VirtualInputManager" and vim then
+            return vim
+        end
+
+        -- convenience camera shortcut
+        if key == "CurrentCamera" then
+            return workspace.CurrentCamera
+        end
+
+        -- cached service lookup
+        if ServiceCache[key] then
+            return ServiceCache[key]
+        end
+
+        local ok, service = pcall(function()
+            return game:GetService(key)
+        end)
+
+        if ok and service then
+            ServiceCache[key] = service
+            rawset(self, key, service)
+            return service
+        end
+
+        return nil
+    end
+})
+
+return CloverixServices
